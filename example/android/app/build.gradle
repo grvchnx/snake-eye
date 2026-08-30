@@ -93,7 +93,7 @@ dependencies {
 // the script always exits 0, so an offline build still succeeds and simply falls back to the runtime download.
 tasks.register("fetchBundledModels", Exec) {
     workingDir = rootProject.projectDir
-    commandLine "bash", "${rootProject.projectDir}/../../scripts/fetch_bundled_models.sh", "android"
+    commandLine "bash", "${rootProject.projectDir}/../../scripts/fetch_bundled_models.sh"
     ignoreExitValue = true
 }
 tasks.matching { it.name == "preBuild" }.configureEach { dependsOn("fetchBundledModels") }

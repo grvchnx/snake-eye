@@ -31,9 +31,7 @@ class TaskSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tasks = YOLOTask.values
-        .where((t) => showSemanticTask || t != YOLOTask.semantic)
-        .toList(growable: false);
+    final tasks = <YOLOTask>[YOLOTask.detect, YOLOTask.segment, YOLOTask.pose];
 
     // Content-hug + centered (NOT full-width) so the control only uses the width it needs, like the iOS app. Wrapped in
     // a scale-down FittedBox: on narrow screens the 7 segments can exceed the available width, which makes
