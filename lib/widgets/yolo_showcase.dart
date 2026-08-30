@@ -518,7 +518,7 @@ class _YOLOShowcaseState extends State<YOLOShowcase> {
               children: [
                 const ListTile(
                   leading: Icon(Icons.center_focus_strong),
-                  title: Text('Ultralytics YOLO'),
+                  title: Text('SnakeEye'),
                   subtitle: Text('Real-time AI vision on-device'),
                 ),
                 const ListTile(

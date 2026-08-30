@@ -51,7 +51,7 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        text: 'Ultralytics YOLO',
+        text: 'SnakeEye',
         sharePositionOrigin: origin,
       ),
     );

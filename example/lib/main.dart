@@ -13,7 +13,7 @@ class YOLOExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ultralytics YOLO',
+      title: 'SnakeEye',
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(useMaterial3: true),
       initialRoute: '/',
