@@ -16,7 +16,6 @@ export 'utils/error_handler.dart';
 export 'utils/map_converter.dart';
 export 'widgets/focus_reticle.dart';
 export 'widgets/lens_picker.dart';
-export 'widgets/model_size_segmented_control.dart';
 export 'widgets/performance_label.dart';
 export 'widgets/task_segmented_control.dart';
 export 'widgets/threshold_slider_row.dart';

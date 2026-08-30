@@ -11,7 +11,6 @@ import 'package:ultralytics_yolo/core/yolo_model_manager.dart';
 import 'package:ultralytics_yolo/core/yolo_model_resolver.dart';
 import 'package:ultralytics_yolo/widgets/focus_reticle.dart';
 import 'package:ultralytics_yolo/widgets/lens_picker.dart';
-import 'package:ultralytics_yolo/widgets/model_size_segmented_control.dart';
 import 'package:ultralytics_yolo/widgets/performance_label.dart';
 import 'package:ultralytics_yolo/widgets/task_segmented_control.dart';
 import 'package:ultralytics_yolo/widgets/threshold_slider_row.dart';
@@ -996,15 +995,6 @@ class _ShowcaseOverlay extends StatelessWidget {
           currentTask: task,
           onTaskChanged: onTaskChanged,
           showSemanticTask: showSemanticTask,
-        ),
-        const SizedBox(height: 4),
-        ModelSizeSegmentedControl(
-          currentSize: size,
-          availableSizes: availableSizes,
-          supportedSizes: supportedSizes,
-          onSizeChanged: onSizeChanged,
-          downloadingSize: downloadingSize,
-          downloadFraction: downloadFraction,
         ),
         if (modelErrorMessage != null)
           Padding(
