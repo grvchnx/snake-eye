@@ -9,10 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultralytics_yolo/core/yolo_model_manager.dart';
 import 'package:ultralytics_yolo/core/yolo_model_resolver.dart';
-import 'package:ultralytics_yolo/widgets/camera_toolbar.dart';
 import 'package:ultralytics_yolo/widgets/focus_reticle.dart';
 import 'package:ultralytics_yolo/widgets/lens_picker.dart';
-import 'package:ultralytics_yolo/widgets/logo_overlay.dart';
 import 'package:ultralytics_yolo/widgets/model_size_segmented_control.dart';
 import 'package:ultralytics_yolo/widgets/performance_label.dart';
 import 'package:ultralytics_yolo/widgets/task_segmented_control.dart';
@@ -628,7 +626,6 @@ class _YOLOShowcaseState extends State<YOLOShowcase> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final viewSize = Size(constraints.maxWidth, constraints.maxHeight);
-            final isLandscape = constraints.maxWidth > constraints.maxHeight;
             // Cache for the focus-stream listener (registered in initState, fires later — needs a synchronous
             // view-size lookup).
             _viewSize = viewSize;
@@ -690,13 +687,6 @@ class _YOLOShowcaseState extends State<YOLOShowcase> {
                   onToggleTorch: () => unawaited(_onToggleTorch()),
                   onShare: () => unawaited(_onShare()),
                   onInfo: () => _showInfoSheet(context),
-                ),
-                // Ultralytics logotype, bottom-right — matches `Main.storyboard` logoImage (frame x215 y625 w159 h67
-                // on a 393x852 canvas, anchored bottom-right ~19pt from the edge, sitting above the toolbar).
-                Positioned(
-                  right: 19,
-                  bottom: isLandscape ? 100 : 160,
-                  child: const LogoOverlay(width: 159),
                 ),
                 Positioned.fill(
                   child: AnimatedSwitcher(
@@ -939,7 +929,6 @@ class _ShowcaseOverlay extends StatelessWidget {
             ],
           ),
         ),
-        _toolbar(),
       ],
     );
   }
@@ -963,30 +952,25 @@ class _ShowcaseOverlay extends StatelessWidget {
         ),
         Positioned(
           left: _sidePadding,
-          bottom: CameraToolbar.height + (hasLenses ? 18 : 0),
+          bottom: hasLenses ? 18 : 0,
           width: sliderWidth,
           child: _thresholdControls(sliderWidthFactor: 1),
         ),
         Positioned(
           left: _sidePadding,
           right: _sidePadding,
-          bottom: CameraToolbar.height + (hasLenses ? 42 : 8),
+          bottom: hasLenses ? 42 : 8,
           child: _zoomLabel(),
         ),
         if (hasLenses)
           Positioned(
             left: _sidePadding,
             right: _sidePadding,
-            bottom: CameraToolbar.height + 2,
+            bottom: 2,
             child: _lensPicker(),
           ),
         if (versionLabel != null)
-          Positioned(
-            left: _sidePadding,
-            bottom: CameraToolbar.height + 4,
-            child: _version(),
-          ),
-        Positioned(left: 0, right: 0, bottom: 0, child: _toolbar()),
+          Positioned(left: _sidePadding, bottom: 4, child: _version()),
       ],
     );
   }
@@ -1089,14 +1073,25 @@ class _ShowcaseOverlay extends StatelessWidget {
     );
   }
 
-  Widget _lensPicker() {
-    return ValueListenableBuilder<double>(
-      valueListenable: zoom,
-      builder: (context, z, _) => LensPicker(
-        lenses: lenses,
-        currentZoomFactor: z,
-        onLensSelected: onLensSelected,
-        trailing: showTorchControl ? _torchControl() : null,
+  Widget _cameraSwitchButton() {
+    return Semantics(
+      button: true,
+      label: 'Switch camera',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onSwitchCamera,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.38),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: const Icon(
+            CupertinoIcons.camera_rotate,
+            color: Colors.white,
+            size: 17,
+          ),
+        ),
       ),
     );
   }
@@ -1124,6 +1119,27 @@ class _ShowcaseOverlay extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _lensPicker() {
+    return ValueListenableBuilder<double>(
+      valueListenable: zoom,
+      builder: (context, z, _) => LensPicker(
+        lenses: lenses,
+        currentZoomFactor: z,
+        onLensSelected: onLensSelected,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _cameraSwitchButton(),
+            if (showTorchControl) ...[
+              const SizedBox(width: 6),
+              _torchControl(),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -1161,16 +1177,6 @@ class _ShowcaseOverlay extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.7),
         fontSize: 10,
       ),
-    );
-  }
-
-  Widget _toolbar() {
-    return CameraToolbar(
-      isPaused: isPaused,
-      onPlayPause: onPlayPause,
-      onSwitchCamera: onSwitchCamera,
-      onShare: onShare,
-      onInfo: onInfo,
     );
   }
 }
