@@ -47,5 +47,4 @@ flutter:
       ios:
         pluginClass: YOLOPlugin
   assets:
-    - assets/ultralytics_yolo_logotype.png
     - assets/focus_reticle.png
