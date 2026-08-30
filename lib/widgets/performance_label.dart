@@ -43,15 +43,6 @@ class PerformanceLabel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          modelName,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
         const SizedBox(height: 2),
         // Both timing lines keep their height before the first result arrives (blank text, not absent
         // widgets), so the rows below don't shift down when inference starts.
