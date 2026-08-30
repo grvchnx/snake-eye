@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:ultralytics_yolo_example/presentation/screens/camera_inference_screen.dart';
-import 'package:ultralytics_yolo_example/presentation/screens/single_image_screen.dart';
 
 void main() {
   runApp(const YOLOExampleApp());
@@ -18,10 +17,7 @@ class YOLOExampleApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(useMaterial3: true),
       initialRoute: '/',
-      routes: {
-        '/': (_) => const CameraInferenceScreen(),
-        '/single': (_) => const SingleImageScreen(),
-      },
+      routes: {'/': (_) => const CameraInferenceScreen()},
     );
   }
 }
