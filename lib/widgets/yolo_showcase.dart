@@ -43,10 +43,6 @@ class YOLOShowcase extends StatefulWidget {
   /// Optional theme override; defaults to dark Material 3.
   final ThemeData? theme;
 
-  /// Optional app version label shown in the bottom-left. Hidden when null. Pass the consuming app's
-  /// `package_info_plus` version, e.g. `'v${info.version}'`.
-  final String? versionLabel;
-
   const YOLOShowcase({
     super.key,
     this.initialTask = YOLOTask.detect,
@@ -55,7 +51,6 @@ class YOLOShowcase extends StatefulWidget {
     this.onCapture,
     this.controller,
     this.theme,
-    this.versionLabel,
   });
 
   @override
@@ -666,7 +661,6 @@ class _YOLOShowcaseState extends State<YOLOShowcase> {
                   lensLabel: _lensLabel,
                   lenses: _lenses,
                   isPaused: _isPaused,
-                  versionLabel: widget.versionLabel,
                   showSemanticTask: widget.showSemanticTask,
                   onTaskChanged: _onTaskChanged,
                   onSizeChanged: _onSizeChanged,
@@ -804,8 +798,7 @@ class _ModelSwitchLoadingOverlay extends StatelessWidget {
 ///     (32pt), 4pt gap, model-size control (32pt).
 ///   * Middle: empty so the camera shows through.
 ///   * Bottom: confidence + IoU sliders (46% view width, 20pt left padding), then zoom indicator, then lens picker,
-///     then the 66pt full-width toolbar. The Ultralytics logo + optional version label float to the right and left of
-///     the zoom HUD.
+///     then the 66pt full-width toolbar.
 class _ShowcaseOverlay extends StatelessWidget {
   const _ShowcaseOverlay({
     required this.modelName,
@@ -823,7 +816,6 @@ class _ShowcaseOverlay extends StatelessWidget {
     required this.lensLabel,
     required this.lenses,
     required this.isPaused,
-    required this.versionLabel,
     required this.showSemanticTask,
     required this.onTaskChanged,
     required this.onSizeChanged,
@@ -857,7 +849,6 @@ class _ShowcaseOverlay extends StatelessWidget {
   final ValueListenable<String> lensLabel;
   final List<LensInfo> lenses;
   final bool isPaused;
-  final String? versionLabel;
   final bool showSemanticTask;
   final ValueChanged<YOLOTask> onTaskChanged;
   final ValueChanged<String> onSizeChanged;
@@ -915,17 +906,7 @@ class _ShowcaseOverlay extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
-            children: [
-              _lensPicker(),
-              // Version stamp at the lens-tabs vertical level, tucked into the bottom-left corner (negative left
-              // escapes the row's side padding so it sits closer to the screen edge than the controls).
-              if (versionLabel != null)
-                Positioned(
-                  left: -(_sidePadding - 8),
-                  bottom: 0,
-                  child: _version(),
-                ),
-            ],
+            children: [_lensPicker()],
           ),
         ),
       ],
@@ -968,8 +949,6 @@ class _ShowcaseOverlay extends StatelessWidget {
             bottom: 2,
             child: _lensPicker(),
           ),
-        if (versionLabel != null)
-          Positioned(left: _sidePadding, bottom: 4, child: _version()),
       ],
     );
   }
@@ -1156,16 +1135,6 @@ class _ShowcaseOverlay extends StatelessWidget {
             size: 17,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _version() {
-    return Text(
-      versionLabel!,
-      style: TextStyle(
-        color: Colors.white.withValues(alpha: 0.7),
-        fontSize: 10,
       ),
     );
   }

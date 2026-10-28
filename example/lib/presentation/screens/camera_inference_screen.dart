@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
@@ -21,19 +20,9 @@ class CameraInferenceScreen extends StatefulWidget {
 }
 
 class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
-  String? _versionLabel;
-
   @override
   void initState() {
     super.initState();
-    _loadVersion();
-  }
-
-  Future<void> _loadVersion() async {
-    final info = await PackageInfo.fromPlatform();
-    if (!mounted) return;
-    // Match yolo-ios-app's `labelVersion`: "v<version> (<build>)".
-    setState(() => _versionLabel = 'v${info.version} (${info.buildNumber})');
   }
 
   Future<void> _onCapture(Uint8List bytes) async {
@@ -60,8 +49,6 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   @override
   Widget build(BuildContext context) {
     // Show all 6 tasks (Detect / Segment / Semantic / Classify / Pose / OBB) to match the iOS app's task control.
-    return Scaffold(
-      body: YOLOShowcase(versionLabel: _versionLabel, onCapture: _onCapture),
-    );
+    return Scaffold(body: YOLOShowcase(onCapture: _onCapture));
   }
 }
