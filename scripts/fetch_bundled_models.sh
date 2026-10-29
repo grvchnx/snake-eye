@@ -30,7 +30,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 DEST="$REPO_ROOT/example/assets/models"
 
 # Android release source.
-BASE="https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6"
+BASE="https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.7.0"
 
 # Only the models currently exposed by the app.
 FILES=(
