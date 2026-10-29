@@ -9,8 +9,7 @@ import android.util.Log
 
 /**
  * High-performance ObjectDetector on LiteRT 2.x ([LiteRtModel]).
- * - Letterbox -> getPixels -> FloatArray with reusable buffers
- * - Reuses Bitmap / FloatArray / output arrays to reduce allocations
+ * Detects only the configured allowed classes.
  */
 class ObjectDetector(
     context: Context,
@@ -19,49 +18,61 @@ class ObjectDetector(
     private val useGpu: Boolean = true,
     private var numItemsThreshold: Int = 30
 ) : BasePredictor() {
-    // Inference output dimensions
+
+    // Only these classes are returned by the detector.
+    private val allowedClasses = setOf("person", "tie")
+
+    // Inference output dimensions.
     private var out1 = 0
     private var out2 = 0
-    // Reuse inference output array ([1][out1][out2])
 
-    // ======== Workspace for fast preprocessing ========
-    // (1) Temporary letterboxed Bitmap matching model input size
+    // Reusable preprocessing buffers.
     private lateinit var scaledBitmap: Bitmap
-
-    // (2) Array to temporarily store pixels (inWidth*inHeight)
     private lateinit var intValues: IntArray
-
-    // (3) Reusable float input (1 * height * width * 3) for the CompiledModel input buffer.
     private lateinit var floatInput: FloatArray
 
+    // Thresholds.
+    private var confidenceThreshold = 0.25f
+    private var iouThreshold = 0.7f
+
     init {
-        // Labels from the model metadata: Ultralytics' appended ZIP, falling back to standard embedded TFLite
-        // (FlatBuffers) metadata so drag-and-dropped custom models keep their labels.
         val loadedLabels = YOLOFileUtils.loadModelLabels(context, modelPath)
+
         if (loadedLabels != null) {
             this.labels = loadedLabels
             Log.i(TAG, "Labels loaded from model metadata.")
         } else if (this.labels.isEmpty()) {
-            Log.w(TAG, "No embedded labels found and none provided; detections may lack class names.")
+            Log.w(
+                TAG,
+                "No embedded labels found and none provided; detections may lack class names."
+            )
         }
 
-        rtModel = InferenceModel.create(context, modelPath, useGpu, "ObjectDetector")
+        rtModel = InferenceModel.create(
+            context,
+            modelPath,
+            useGpu,
+            "ObjectDetector"
+        )
 
-        // Input dims [1, H, W, 3].
+        // Input dimensions: [1, H, W, 3].
         val inDims = rtModel.inputDims
         val inHeight = if (inDims.size >= 4) inDims[1] else 640
         val inWidth = if (inDims.size >= 4) inDims[2] else 640
+
         inputSize = Size(inWidth, inHeight)
         modelInputSize = Pair(inWidth, inHeight)
 
-        // Output dims [1, features, anchors], e.g. [1, 84, 8400]. Fall back to deriving from the element count.
+        // Output dimensions.
         val outDims = rtModel.outputDims.getOrNull(0) ?: IntArray(0)
+
         if (outDims.size >= 3) {
             out1 = outDims[1]
             out2 = outDims[2]
         } else {
             val count = rtModel.outputElementCounts.getOrElse(0) { 0 }
             val features = labels.size + 4
+
             if (features in 1..count && count % features == 0) {
                 out1 = features
                 out2 = count / features
@@ -72,26 +83,26 @@ class ObjectDetector(
     }
 
     private fun initPreprocessingResources(width: Int, height: Int) {
-        scaledBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        scaledBitmap = Bitmap.createBitmap(
+            width,
+            height,
+            Bitmap.Config.ARGB_8888
+        )
         intValues = IntArray(width * height)
         floatInput = FloatArray(width * height * 3)
     }
 
-    /**
-     * Main inference method
-     * - Preprocessing: rotate if needed, letterbox into scaledBitmap, then getPixels → inputBuffer
-     * - TFLite run
-     * - Postprocessing (NMS via JNI, etc.)
-     * @param bitmap Input bitmap to process
-     * @param origWidth Original width of the source image
-     * @param origHeight Original height of the source image
-     * @param rotateForCamera Whether this is a camera feed that requires rotation (true) or a single image (false)
-     * @return YOLOResult containing detection results
-     */
-    override fun predict(bitmap: Bitmap, origWidth: Int, origHeight: Int, rotateForCamera: Boolean, isLandscape: Boolean): YOLOResult {
+    override fun predict(
+        bitmap: Bitmap,
+        origWidth: Int,
+        origHeight: Int,
+        rotateForCamera: Boolean,
+        isLandscape: Boolean
+    ): YOLOResult {
         val overallStartTime = System.nanoTime()
         t0 = overallStartTime
 
+        // Preprocess image.
         ImageUtils.prepareBitmapForModel(
             bitmap = bitmap,
             targetBitmap = scaledBitmap,
@@ -100,6 +111,7 @@ class ObjectDetector(
             isFrontCamera = isFrontCamera,
             rotationDegrees = cameraRotationDegrees
         )
+
         ImageUtils.copyRgbBitmapToFloatArray(
             scaledBitmap,
             floatInput,
@@ -109,48 +121,77 @@ class ObjectDetector(
             channelsFirst = rtModel.inputUsesNchw
         )
 
-        // ======== Inference ============
+        // Run inference.
         val preEnd = System.nanoTime()
         val flat = rtModel.run(floatInput)[0]
         val inferEnd = System.nanoTime()
 
-        // ======== Post-processing: decode straight from the flat [out1 x out2] output (no reshape copies) ========
+        // Postprocess model output.
         val resultBoxes = if (out2 < out1 && out2 >= 6) {
-            postprocessEndToEnd(flat, rows = out1, rowLen = out2)
+            postprocessEndToEnd(
+                flat,
+                rows = out1,
+                rowLen = out2
+            )
         } else {
             val classCount = (out1 - 4).coerceAtLeast(0)
+
             postprocess(
                 flat,
-                w = out2,   // anchors
-                h = out1,   // features
+                w = out2,
+                h = out1,
                 confidenceThreshold = confidenceThreshold,
                 iouThreshold = iouThreshold,
                 numItemsThreshold = numItemsThreshold,
                 numClasses = classCount
             )
         }
-        // Convert to Box list
+
+        // Convert allowed detections to Box objects.
         val boxes = mutableListOf<Box>()
+
         for (boxArray in resultBoxes) {
-            if (boxArray.size >= 6) {
-                val rect = inputRectFromOutputRect(
-                    RectF(boxArray[0], boxArray[1], boxArray[0] + boxArray[2], boxArray[1] + boxArray[3]),
+            if (boxArray.size < 6) continue
+
+            val classIdx = boxArray[5].toInt()
+            val label = labelName(classIdx).trim()
+
+            if (!isAllowedClass(label)) continue
+
+            val rect = inputRectFromOutputRect(
+                RectF(
+                    boxArray[0],
+                    boxArray[1],
+                    boxArray[0] + boxArray[2],
+                    boxArray[1] + boxArray[3]
+                ),
+                origWidth,
+                origHeight
+            )
+
+            if (rect != null) {
+                val normRect = normalizedRectFromInputRect(
+                    rect,
                     origWidth,
                     origHeight
                 )
 
-                if (rect != null) {
-                    val normRect = normalizedRectFromInputRect(rect, origWidth, origHeight)
-                    val classIdx = boxArray[5].toInt()
-                    boxes.add(Box(classIdx, labelName(classIdx), boxArray[4], rect, normRect))
-                }
+                boxes.add(
+                    Box(
+                        classIdx,
+                        label,
+                        boxArray[4],
+                        rect,
+                        normRect
+                    )
+                )
             }
         }
 
         val timing = finishTiming(preEnd, inferEnd)
 
         return YOLOResult(
-            origShape = com.ultralytics.yolo.Size(origWidth, origHeight),
+            origShape = Size(origWidth, origHeight),
             boxes = boxes,
             speed = timing.speedMs,
             fps = timing.fps,
@@ -161,9 +202,9 @@ class ObjectDetector(
         )
     }
 
-    // Thresholds (like setConfidenceThreshold, setIouThreshold in TFLiteDetector)
-    private var confidenceThreshold = 0.25f
-    private var iouThreshold = 0.7f
+    private fun isAllowedClass(label: String): Boolean {
+        return label.trim().lowercase() in allowedClasses
+    }
 
     override fun setConfidenceThreshold(conf: Double) {
         confidenceThreshold = conf.toFloat()
@@ -188,7 +229,7 @@ class ObjectDetector(
         super.setNumItemsThreshold(n)
     }
 
-    // Post-processing via JNI
+    // Native postprocessing for standard YOLO output.
     private external fun postprocess(
         predictions: FloatArray,
         w: Int,
@@ -199,35 +240,61 @@ class ObjectDetector(
         numClasses: Int
     ): Array<FloatArray>
 
-    private fun postprocessEndToEnd(flat: FloatArray, rows: Int, rowLen: Int): Array<FloatArray> {
+    /**
+     * Postprocess end-to-end output.
+     * Filter allowed classes before applying the result limit.
+     */
+    private fun postprocessEndToEnd(
+        flat: FloatArray,
+        rows: Int,
+        rowLen: Int
+    ): Array<FloatArray> {
         val boxes = mutableListOf<FloatArray>()
+
         for (i in 0 until rows) {
             val base = i * rowLen
+
+            // Avoid reading beyond the output buffer.
+            if (base < 0 || base + 5 >= flat.size) continue
+
             val confidence = flat[base + 4]
             if (confidence <= confidenceThreshold) continue
+
+            val classIdx = flat[base + 5].toInt()
+            val label = labelName(classIdx).trim()
+
+            // Discard classes before they consume the output limit.
+            if (!isAllowedClass(label)) continue
+
             val x1 = flat[base]
             val y1 = flat[base + 1]
+            val x2 = flat[base + 2]
+            val y2 = flat[base + 3]
+
             boxes.add(
                 floatArrayOf(
                     x1,
                     y1,
-                    flat[base + 2] - x1,
-                    flat[base + 3] - y1,
+                    x2 - x1,
+                    y2 - y1,
                     confidence,
-                    flat[base + 5]
+                    classIdx.toFloat()
                 )
             )
+
             if (boxes.size >= numItemsThreshold) break
         }
+
         return boxes.toTypedArray()
     }
 
     companion object {
         private const val TAG = "ObjectDetector"
-        // Load JNI library
+
         init {
             System.loadLibrary("ultralytics")
         }
+
         private const val INPUT_MEAN = 0f
         private const val INPUT_STANDARD_DEVIATION = 255f
     }

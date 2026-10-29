@@ -35,7 +35,6 @@ BASE="https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6"
 # Only the models currently exposed by the app.
 FILES=(
   "yolo26n_w8a32.tflite"
-  "yolo26n-seg_w8a32.tflite"
   "yolo26n-pose_w8a32.tflite"
 )
 
