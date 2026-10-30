@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'package:flutter/material.dart';
 
 /// Top HUD: model name (`YOLO26n`) over an FPS / inference-time line.

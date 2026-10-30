@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.app.Activity
@@ -46,11 +44,13 @@ class CustomStreamHandler(private val viewId: Int) : EventChannel.StreamHandler 
         } else {
             // Test the sink by sending a simple message
             try {
-                events.success(mapOf(
-                    "test" to "Event channel active",
-                    "viewId" to viewId,
-                    "timestamp" to System.currentTimeMillis()
-                ))
+                events.success(
+                    mapOf(
+                        "test" to "Event channel active",
+                        "viewId" to viewId,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error sending test message to event sink", e)
             }
@@ -60,12 +60,14 @@ class CustomStreamHandler(private val viewId: Int) : EventChannel.StreamHandler 
             mainHandler.postDelayed({
                 try {
                     if (sink != null) {
-                        sink?.success(mapOf(
-                            "test" to "Event sink verification",
-                            "viewId" to viewId,
-                            "timestamp" to System.currentTimeMillis(),
-                            "sinkAge" to (System.currentTimeMillis() - sinkSetTime)
-                        ))
+                        sink?.success(
+                            mapOf(
+                                "test" to "Event sink verification",
+                                "viewId" to viewId,
+                                "timestamp" to System.currentTimeMillis(),
+                                "sinkAge" to (System.currentTimeMillis() - sinkSetTime)
+                            )
+                        )
                     } else {
                         Log.w(TAG, "Sink no longer available for delayed test")
                     }
@@ -127,8 +129,10 @@ class YOLOPlatformViewFactory(
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private var activity: Activity? = null
     private val TAG = "YOLOPlatformViewFactory"
+
     // Map to store active views, accessible by YoloPlugin
     internal val activeViews = mutableMapOf<Int, YOLOPlatformView>()
+
     // Map to store event channel handlers, keyed by viewId
     private val eventChannelHandlers = mutableMapOf<Int, EventChannel.StreamHandler>()
 
@@ -146,7 +150,10 @@ class YOLOPlatformViewFactory(
         // Get the unique ID for this view
         val dartViewIdParam = creationParams?.get("viewId")
         val viewUniqueId = dartViewIdParam as? String ?: viewId.toString().also {
-            Log.w(TAG, "Using platform int viewId '$it' as fallback for viewUniqueId because Dart 'viewId' was null or not a String.")
+            Log.w(
+                TAG,
+                "Using platform int viewId '$it' as fallback for viewUniqueId because Dart 'viewId' was null or not a String."
+            )
         }
 
         // Create event channel for detection results

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 // lib/yolo_result.dart
 
 import 'dart:typed_data';

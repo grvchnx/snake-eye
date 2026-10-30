@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -34,7 +32,7 @@ val ultralyticsColors: List<Int> = listOf(
  */
 object YOLOUtils {
     private const val TAG = "YOLOUtils"
-    
+
     /**
      * Checks if the provided path is an absolute file path
      */
@@ -49,12 +47,12 @@ object YOLOUtils {
         val file = java.io.File(path)
         return file.exists() && file.isFile
     }
-    
+
     /**
      * Loads a model file from either assets or the file system.
      * Supports both asset paths and absolute file system paths.
      * If the provided model path doesn't include an extension, ".tflite" will be appended.
-     * 
+     *
      * @param context The application context
      * @param modelPath The model path (can be an asset path or absolute filesystem path)
      * @return ByteBuffer containing the model data
@@ -95,12 +93,15 @@ object YOLOUtils {
                     return loadMappedAsset(context, modelPath)
                 }
             } catch (e2: Exception) {
-                Log.e(TAG, "Failed to load model with both paths. Original error: ${e.message}, Fallback error: ${e2.message}")
+                Log.e(
+                    TAG,
+                    "Failed to load model with both paths. Original error: ${e.message}, Fallback error: ${e2.message}"
+                )
                 throw e2
             }
         }
     }
-    
+
     /**
      * Loads a model file from the filesystem
      * @param filePath Absolute path to the model file
@@ -113,7 +114,7 @@ object YOLOUtils {
         val declaredLength = file.length()
         return fileChannel.map(java.nio.channels.FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
-    
+
     /**
      * Ensure the model path has a model extension, appending .tflite (the default runtime) when missing.
      * QNN context-binary ONNX paths (.onnx) pass through unchanged.
@@ -126,7 +127,7 @@ object YOLOUtils {
             modelPath
         }
     }
-    
+
     /**
      * Checks all possible paths where a model could be found
      * @param context Application context
@@ -136,16 +137,16 @@ object YOLOUtils {
     fun checkModelExistence(context: Context, modelPath: String): Map<String, Any> {
         // Try with .tflite extension
         val withExtension = ensureTFLiteExtension(modelPath)
-        
+
         // Check absolute paths first
         if (isAbsolutePath(withExtension) && fileExistsAtPath(withExtension)) {
             return mapOf("exists" to true, "path" to withExtension, "location" to "filesystem")
         }
-        
+
         if (isAbsolutePath(modelPath) && fileExistsAtPath(modelPath)) {
             return mapOf("exists" to true, "path" to modelPath, "location" to "filesystem")
         }
-        
+
         // Then check assets
         try {
             // This will throw an exception if the asset doesn't exist

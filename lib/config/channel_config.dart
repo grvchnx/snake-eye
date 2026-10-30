@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'package:flutter/services.dart';
 
 /// Centralized channel naming and construction for YOLO platform interop.

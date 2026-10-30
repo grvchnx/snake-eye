@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'package:flutter/material.dart';
 
 /// Two-line zoom HUD: numeric zoom factor on top, human-readable lens label below (e.g. `Wide camera`, `Ultra wide

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.util.Log
@@ -96,7 +94,7 @@ class LiteRtModel(
         Log.i(
             tag,
             "LiteRT compiled on $acc; inputDims=${inputDims.toList()} " +
-                "outputDims=${outputDims.map { it.toList() }} outputCounts=${outputElementCounts.toList()}",
+                    "outputDims=${outputDims.map { it.toList() }} outputCounts=${outputElementCounts.toList()}",
         )
     }
 
@@ -132,27 +130,31 @@ class LiteRtModel(
             val nativeDims = sequenceOf("images", "args_0", "input", "input_1", "serving_default_input")
                 .firstNotNullOfOrNull { name ->
                     try {
-                        compiled.getInputTensorType(inputName = name).layout?.dimensions?.toIntArray()?.takeIf { it.isNotEmpty() }
+                        compiled.getInputTensorType(inputName = name).layout?.dimensions?.toIntArray()
+                            ?.takeIf { it.isNotEmpty() }
                     } catch (e: Throwable) {
                         null
                     }
                 } ?: run {
-                    // Unrecognized input name: size the (already-created) input buffer and fall back to NHWC [1,H,W,3]
-                    // for a single square 3-channel image — the common non-Ultralytics TFLite layout. litert-torch NCHW
-                    // exports are always named args_0 (handled above), so an unrecognized input is almost certainly
-                    // NHWC; warn since the layout can't be confirmed from the name. Only fail when even that is
-                    // impossible (non-square or non-3-channel input), which would otherwise feed the graph wrong data.
-                    val count = inputs[0].readFloat().size
-                    val side = if (count > 0 && count % 3 == 0) sqrt((count / 3).toDouble()).roundToInt() else 0
-                    if (side > 0 && side * side * 3 == count) {
-                        Log.w(tag, "Input tensor name not recognized; assuming NHWC [1, $side, $side, 3] from buffer size $count.")
-                        intArrayOf(1, side, side, 3)
-                    } else {
-                        throw IllegalStateException(
-                            "Could not read LiteRT input tensor shape: unrecognized input name and buffer size $count is not a square 3-channel image."
-                        )
-                    }
+                // Unrecognized input name: size the (already-created) input buffer and fall back to NHWC [1,H,W,3]
+                // for a single square 3-channel image — the common non-Ultralytics TFLite layout. litert-torch NCHW
+                // exports are always named args_0 (handled above), so an unrecognized input is almost certainly
+                // NHWC; warn since the layout can't be confirmed from the name. Only fail when even that is
+                // impossible (non-square or non-3-channel input), which would otherwise feed the graph wrong data.
+                val count = inputs[0].readFloat().size
+                val side = if (count > 0 && count % 3 == 0) sqrt((count / 3).toDouble()).roundToInt() else 0
+                if (side > 0 && side * side * 3 == count) {
+                    Log.w(
+                        tag,
+                        "Input tensor name not recognized; assuming NHWC [1, $side, $side, 3] from buffer size $count."
+                    )
+                    intArrayOf(1, side, side, 3)
+                } else {
+                    throw IllegalStateException(
+                        "Could not read LiteRT input tensor shape: unrecognized input name and buffer size $count is not a square 3-channel image."
+                    )
                 }
+            }
             // litert-torch exports are NCHW [1,3,H,W]; legacy onnx2tf exports are NHWC [1,H,W,3]. Detect from the shape
             // and report NHWC to predictors either way so they stay layout-agnostic.
             val nchw = nativeDims.size >= 4 && nativeDims[1] == 3 && nativeDims.last() != 3

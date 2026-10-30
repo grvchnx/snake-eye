@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import ai.onnxruntime.OnnxTensor
@@ -85,7 +83,7 @@ class OrtQnnModel(context: Context, modelPath: String, private val tag: String) 
         Log.i(
             tag,
             "ONNX Runtime QNN session on NPU; inputDims=${inputDims.toList()} " +
-                "outputDims=${outputDims.map { it.toList() }}",
+                    "outputDims=${outputDims.map { it.toList() }}",
         )
     }
 
@@ -93,7 +91,11 @@ class OrtQnnModel(context: Context, modelPath: String, private val tag: String) 
         val file = File(modelPath)
         if (file.isAbsolute && file.exists()) return env.createSession(modelPath, options)
         // Flutter asset: EPContext models are self-contained, so load the bytes through the AssetManager
-        for (path in listOf(modelPath, modelPath.removePrefix("flutter_assets/"), "flutter_assets/$modelPath").distinct()) {
+        for (path in listOf(
+            modelPath,
+            modelPath.removePrefix("flutter_assets/"),
+            "flutter_assets/$modelPath"
+        ).distinct()) {
             try {
                 context.assets.open(path).use { return env.createSession(it.readBytes(), options) }
             } catch (_: IOException) {

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -20,11 +18,11 @@ class ObbDetector(
     private lateinit var floatInput: FloatArray
     private lateinit var inputBitmap: Bitmap
     private lateinit var intValues: IntArray
-    
+
     // Reuse output arrays to reduce allocations
-    
+
     // Transposed array to avoid recreating on each inference
-    
+
     // Output dimensions
     private var outBatch = 0
     private var outChannels = 0
@@ -57,13 +55,19 @@ class ObbDetector(
         inputBitmap = Bitmap.createBitmap(inWidth, inHeight, Bitmap.Config.ARGB_8888)
         intValues = IntArray(inWidth * inHeight)
     }
-    
+
     override fun setNumItemsThreshold(n: Int) {
         this.numItemsThreshold = n
         super.setNumItemsThreshold(n)
     }
 
-    override fun predict(bitmap: Bitmap, origWidth: Int, origHeight: Int, rotateForCamera: Boolean, isLandscape: Boolean): YOLOResult {
+    override fun predict(
+        bitmap: Bitmap,
+        origWidth: Int,
+        origHeight: Int,
+        rotateForCamera: Boolean,
+        isLandscape: Boolean
+    ): YOLOResult {
         t0 = System.nanoTime()
 
         ImageUtils.prepareBitmapForModel(
@@ -93,7 +97,7 @@ class ObbDetector(
             origWidth = origWidth,
             origHeight = origHeight
         )
-        
+
         // Apply numItemsThreshold limit
         val limitedDetections = obbDetections.take(numItemsThreshold)
 
@@ -299,7 +303,7 @@ class ObbDetector(
                 val current = inputClosed[j]
                 val next = inputClosed[j + 1]
                 val currentInside = isInside(current, p1, p2)
-                val nextInside    = isInside(next,    p1, p2)
+                val nextInside = isInside(next, p1, p2)
 
                 if (currentInside && nextInside) {
                     outputList.add(next)
@@ -356,7 +360,7 @@ class ObbDetector(
         area += (poly.last().x * poly.first().y) - (poly.first().x * poly.last().y)
         return kotlin.math.abs(area) * 0.5f
     }
-    
+
 }
 
 /** Extension to get Axis-Aligned Bounding Box (AABB) of OBB */

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -71,9 +69,9 @@ class PoseEstimator(
         val featuresFirstPose = isPoseFeatureCount(outputShape[1]) && outputShape[2] > END_TO_END_MAX_ROWS
         val anchorsFirstPose = isPoseFeatureCount(outputShape[2]) && outputShape[1] > END_TO_END_MAX_ROWS
         isEndToEnd = !featuresFirstPose &&
-            !anchorsFirstPose &&
-            outputShape[1] <= END_TO_END_MAX_ROWS &&
-            isEndToEndFeatureCount(outputShape[2])
+                !anchorsFirstPose &&
+                outputShape[1] <= END_TO_END_MAX_ROWS &&
+                isEndToEndFeatureCount(outputShape[2])
         outputLayout = when {
             featuresFirstPose -> OutputLayout.FEATURES_FIRST
             isEndToEnd || anchorsFirstPose -> OutputLayout.ANCHORS_FIRST
@@ -88,6 +86,7 @@ class PoseEstimator(
                 outFeatures = outputShape[1]
                 numAnchors = outputShape[2]
             }
+
             OutputLayout.ANCHORS_FIRST -> {
                 outFeatures = outputShape[2]
                 numAnchors = outputShape[1]
@@ -103,7 +102,13 @@ class PoseEstimator(
         intValues = IntArray(inWidth * inHeight)
     }
 
-    override fun predict(bitmap: Bitmap, origWidth: Int, origHeight: Int, rotateForCamera: Boolean, isLandscape: Boolean): YOLOResult {
+    override fun predict(
+        bitmap: Bitmap,
+        origWidth: Int,
+        origHeight: Int,
+        rotateForCamera: Boolean,
+        isLandscape: Boolean
+    ): YOLOResult {
         t0 = System.nanoTime()
         ImageUtils.prepareBitmapForModel(
             bitmap = bitmap,
@@ -307,12 +312,12 @@ class PoseEstimator(
 
     private fun isPoseFeatureCount(featureCount: Int): Boolean {
         return featureCount >= BOX_CONF_FEATURES + KEYPOINT_FEATURES &&
-            (featureCount - BOX_CONF_FEATURES) % KEYPOINT_FEATURES == 0
+                (featureCount - BOX_CONF_FEATURES) % KEYPOINT_FEATURES == 0
     }
 
     private fun isEndToEndFeatureCount(featureCount: Int): Boolean {
         return isPoseFeatureCount(featureCount) ||
-            (featureCount >= 6 + KEYPOINT_FEATURES && (featureCount - 6) % KEYPOINT_FEATURES == 0)
+                (featureCount >= 6 + KEYPOINT_FEATURES && (featureCount - 6) % KEYPOINT_FEATURES == 0)
     }
 
     private fun keypointCountFromFeatureCount(featureCount: Int, keypointStart: Int = BOX_CONF_FEATURES): Int {

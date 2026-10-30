@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;

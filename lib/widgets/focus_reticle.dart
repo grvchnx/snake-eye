@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'package:flutter/material.dart';
 
 /// Animated tap-to-focus reticle. Sits in the parent `Stack`; whenever [position] flips to a new non-null offset it
