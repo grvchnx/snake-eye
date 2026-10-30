@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -26,29 +24,29 @@ class YOLOPlatformView(
 ) : PlatformView, MethodChannel.MethodCallHandler {
 
     private val yoloView: YOLOView = YOLOView(context)
-    
+
     // Getter for external access to yoloView
     val yoloViewInstance: YOLOView
         get() = yoloView
     private val TAG = "YOLOPlatformView"
-    
+
     // Track if we're actively streaming
     private val isStreaming = AtomicBoolean(false)
-    
+
     // Store last event to resend after reconnection
     @Volatile
     private var lastStreamData: Map<String, Any>? = null
-    
+
     // Initialization flag
     private var initialized = false
-    
+
     // Unique ID to send to Flutter
     private val viewUniqueId: String
-    
+
     // Retry handler for reconnection
     private val retryHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var retryRunnable: Runnable? = null
-    
+
     init {
         val dartViewIdParam = creationParams?.get("viewId")
         viewUniqueId = dartViewIdParam as? String ?: viewId.toString().also {
@@ -108,8 +106,8 @@ class YOLOPlatformView(
                     startStreaming()
                     val context = yoloView.context
                     val hasPermissions = android.Manifest.permission.CAMERA.let { permission ->
-                        android.content.pm.PackageManager.PERMISSION_GRANTED == 
-                        ContextCompat.checkSelfPermission(context, permission)
+                        android.content.pm.PackageManager.PERMISSION_GRANTED ==
+                                ContextCompat.checkSelfPermission(context, permission)
                     }
                     if (hasPermissions) {
                         yoloView.startCamera()
@@ -118,27 +116,27 @@ class YOLOPlatformView(
                     initialized = true
                 }
             }
-            
+
             // Set up inference callback
             yoloView.setOnInferenceCallback { result ->
                 // Callback for compatibility
             }
-            
+
             // Load model
             val useGpu = creationParams?.get("useGpu") as? Boolean ?: true
             yoloView.setModel(modelPath, task, useGpu)
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing YOLOPlatformView", e)
         }
     }
-    
+
     /**
      * Configure YOLOView streaming functionality with setState resilience
      */
     private fun setupYOLOViewStreaming(creationParams: Map<String?, Any?>?) {
         val streamingConfigParam = creationParams?.get("streamingConfig") as? Map<*, *>
-        
+
         val streamConfig = if (streamingConfigParam != null) {
             YOLOStreamConfig(
                 includeDetections = streamingConfigParam["includeDetections"] as? Boolean ?: true,
@@ -170,7 +168,7 @@ class YOLOPlatformView(
                 includeOriginalImage = false
             )
         }
-        
+
         yoloView.setStreamConfig(streamConfig)
 
         // Set up streaming callback with resilience
@@ -203,7 +201,7 @@ class YOLOPlatformView(
             retryHandler.post(send)
         }
     }
-    
+
     /**
      * Send stream data with automatic retry on failure
      */
@@ -211,13 +209,13 @@ class YOLOPlatformView(
         try {
             // Store last data for potential resend
             lastStreamData = streamData
-            
+
             // Cancel any pending retry
             retryRunnable?.let { retryHandler.removeCallbacks(it) }
-            
+
             // Try to send data
             val sent = sendStreamData(streamData)
-            
+
             if (!sent && isStreaming.get()) {
                 // Schedule retry if sending failed
                 scheduleRetry()
@@ -229,14 +227,14 @@ class YOLOPlatformView(
             }
         }
     }
-    
+
     /**
      * Attempt to send stream data
      */
     private fun sendStreamData(streamData: Map<String, Any>): Boolean {
         return try {
             val sink = streamHandler.sink
-            
+
             if (sink != null) {
                 // Send on main thread
                 if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
@@ -244,7 +242,7 @@ class YOLOPlatformView(
                 } else {
                     var success = false
                     val latch = java.util.concurrent.CountDownLatch(1)
-                    
+
                     retryHandler.post {
                         try {
                             sink.success(streamData)
@@ -255,7 +253,7 @@ class YOLOPlatformView(
                             latch.countDown()
                         }
                     }
-                    
+
                     latch.await(100, java.util.concurrent.TimeUnit.MILLISECONDS)
                     success
                 }
@@ -269,13 +267,13 @@ class YOLOPlatformView(
             false
         }
     }
-    
+
     /**
      * Schedule a retry to resend data
      */
     private fun scheduleRetry() {
         retryRunnable?.let { retryHandler.removeCallbacks(it) }
-        
+
         retryRunnable = Runnable {
             if (isStreaming.get()) {
                 // Check if sink is available
@@ -286,32 +284,36 @@ class YOLOPlatformView(
                     }
                 } else {
                     // Request Flutter to recreate the event channel
-                    methodChannel?.invokeMethod("recreateEventChannel", mapOf(
-                        "viewId" to viewUniqueId,
-                        "reason" to "sink_disconnected"
-                    ))
-                    
+                    methodChannel?.invokeMethod(
+                        "recreateEventChannel", mapOf(
+                            "viewId" to viewUniqueId,
+                            "reason" to "sink_disconnected"
+                        )
+                    )
+
                     // Schedule another retry
                     scheduleRetry()
                 }
             }
         }
-        
+
         // Retry after 500ms
         retryHandler.postDelayed(retryRunnable!!, 500)
     }
-    
+
     /**
      * Start streaming
      */
     private fun startStreaming() {
         if (isStreaming.compareAndSet(false, true)) {
             // Send initial test message to verify connection
-            sendStreamData(mapOf(
-                "test" to "Streaming started",
-                "viewId" to viewUniqueId,
-                "timestamp" to System.currentTimeMillis()
-            ))
+            sendStreamData(
+                mapOf(
+                    "test" to "Streaming started",
+                    "viewId" to viewUniqueId,
+                    "timestamp" to System.currentTimeMillis()
+                )
+            )
         }
     }
 
@@ -324,7 +326,7 @@ class YOLOPlatformView(
             retryRunnable = null
         }
     }
-    
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
@@ -337,6 +339,7 @@ class YOLOPlatformView(
                         result.error("invalid_args", "threshold is required", null)
                     }
                 }
+
                 "setIoUThreshold", "setIouThreshold" -> {
                     val threshold = call.argument<Double>("threshold")
                     if (threshold != null) {
@@ -346,6 +349,7 @@ class YOLOPlatformView(
                         result.error("invalid_args", "threshold is required", null)
                     }
                 }
+
                 "setNumItemsThreshold" -> {
                     val numItems = call.argument<Int>("numItems")
                     if (numItems != null) {
@@ -355,30 +359,32 @@ class YOLOPlatformView(
                         result.error("invalid_args", "numItems is required", null)
                     }
                 }
+
                 "setThresholds" -> {
                     val confidence = call.argument<Double>("confidenceThreshold")
                     val iou = call.argument<Double>("iouThreshold")
                     val numItems = call.argument<Int>("numItemsThreshold")
-                    
+
                     confidence?.let { yoloView.setConfidenceThreshold(it) }
                     iou?.let { yoloView.setIouThreshold(it) }
                     numItems?.let { yoloView.setNumItemsThreshold(it) }
-                    
+
                     result.success(null)
                 }
+
                 "setModel" -> {
                     var modelPath = call.argument<String>("modelPath")
                     val taskString = call.argument<String>("task")
                     val useGpu = call.argument<Boolean>("useGpu") ?: true
-                    
+
                     if (modelPath == null || taskString == null) {
                         result.error("invalid_args", "modelPath and task are required", null)
                         return
                     }
-                    
+
                     modelPath = resolveModelPath(context, modelPath)
                     val task = YOLOTask.valueOf(taskString.uppercase())
-                    
+
                     yoloView.setModel(modelPath, task, useGpu) { success ->
                         if (success) {
                             result.success(null)
@@ -388,10 +394,12 @@ class YOLOPlatformView(
                         }
                     }
                 }
+
                 "switchCamera" -> {
                     yoloView.switchCamera()
                     result.success(null)
                 }
+
                 "setTorchMode" -> {
                     val enabled = call.argument<Boolean>("enabled")
                     if (enabled != null) {
@@ -401,6 +409,7 @@ class YOLOPlatformView(
                         result.error("invalid_args", "enabled is required", null)
                     }
                 }
+
                 "setZoomLevel" -> {
                     val zoomLevel = call.argument<Double>("zoomLevel")
                     if (zoomLevel != null) {
@@ -410,6 +419,7 @@ class YOLOPlatformView(
                         result.error("invalid_args", "zoomLevel is required", null)
                     }
                 }
+
                 "setStreamingConfig" -> {
                     // Parse streaming config from arguments
                     val configMap = call.arguments as? Map<*, *>
@@ -436,6 +446,7 @@ class YOLOPlatformView(
                         result.error("invalid_args", "Invalid streaming config", null)
                     }
                 }
+
                 "setShowOverlays" -> {
                     val visible = call.argument<Boolean>("visible")
                     if (visible != null) {
@@ -445,10 +456,12 @@ class YOLOPlatformView(
                         result.error("invalid_args", "visible is required", null)
                     }
                 }
+
                 "stop" -> {
                     yoloView.stop()
                     result.success(null)
                 }
+
                 "restartCamera" -> {
                     yoloView.startCamera()
                     result.success(null)
@@ -462,10 +475,12 @@ class YOLOPlatformView(
                     yoloView.pauseCamera()
                     result.success(null)
                 }
+
                 "resume" -> {
                     yoloView.startCamera()
                     result.success(null)
                 }
+
                 "captureFrame" -> {
                     val imageData = yoloView.captureFrame()
                     if (imageData != null) {
@@ -474,11 +489,13 @@ class YOLOPlatformView(
                         result.error("capture_failed", "Failed to capture frame", null)
                     }
                 }
+
                 "reconnectStream" -> {
                     // Handle reconnection request from Flutter
                     startStreaming()
                     result.success(null)
                 }
+
                 "getAvailableLenses" -> {
                     val lenses = yoloView.enumerateLenses()
                     val payload = lenses.map { lens ->
@@ -489,6 +506,7 @@ class YOLOPlatformView(
                     }
                     result.success(payload)
                 }
+
                 "setLens" -> {
                     val zoomFactor = call.argument<Double>("zoomFactor")
                     if (zoomFactor == null) {
@@ -498,6 +516,7 @@ class YOLOPlatformView(
                         result.success(null)
                     }
                 }
+
                 "tapToFocus" -> {
                     val x = call.argument<Double>("x")
                     val y = call.argument<Double>("y")
@@ -508,6 +527,7 @@ class YOLOPlatformView(
                         result.success(null)
                     }
                 }
+
                 "capturePhoto" -> {
                     val withOverlays = call.argument<Boolean>("withOverlays") ?: true
                     yoloView.capturePhoto(withOverlays) { bytes ->
@@ -518,6 +538,7 @@ class YOLOPlatformView(
                         }
                     }
                 }
+
                 else -> {
                     result.notImplemented()
                 }
@@ -527,11 +548,11 @@ class YOLOPlatformView(
             result.error("method_call_error", e.message, null)
         }
     }
-    
+
     override fun getView(): View {
         return yoloView
     }
-    
+
     override fun dispose() {
         stopStreaming()
 
@@ -552,7 +573,7 @@ class YOLOPlatformView(
         methodChannel?.setMethodCallHandler(null)
         factory.onPlatformViewDisposed(viewId)
     }
-    
+
     private fun resolveModelPath(context: Context, modelPath: String): String {
         return when {
             modelPath.startsWith("/") -> modelPath
@@ -560,6 +581,7 @@ class YOLOPlatformView(
                 val filename = modelPath.removePrefix("internal://")
                 context.filesDir.resolve(filename).absolutePath
             }
+
             else -> modelPath
         }
     }

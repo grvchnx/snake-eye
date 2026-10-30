@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'dart:ui' show Size;
 
 /// Configuration class for customizing YOLO streaming behavior.

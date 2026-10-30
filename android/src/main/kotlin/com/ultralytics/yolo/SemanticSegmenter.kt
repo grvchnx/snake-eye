@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -17,11 +15,13 @@ class SemanticSegmenter(
     private lateinit var floatInput: FloatArray
     private lateinit var inputBitmap: Bitmap
     private lateinit var intValues: IntArray
+
     // The model output kept FLAT (the [1,A,B,C] tensor row-major). Indexing it directly avoids copying the whole
     // output into a jagged Array<Array<Array<FloatArray>>> every frame and re-reading it during argmax.
     private var flatOutput: FloatArray = FloatArray(0)
     private lateinit var outputShape: IntArray
     private var colorCache = IntArray(0)
+
     // Reusable running-best-score buffer for the class-major NCHW argmax (see postProcessSemantic).
     private var scoreScratch = FloatArray(0)
 
@@ -97,7 +97,8 @@ class SemanticSegmenter(
     private fun postProcessSemantic(origWidth: Int, origHeight: Int): SemanticMask? {
         val isClassMap = outputShape.size == 3 // [1, H, W] class indices, argmax already done on the NPU
         val isNCHW = !isClassMap && (outputShape[1] <= outputShape[3] || outputShape[1] == labels.size)
-        val classCount = if (isClassMap) labels.size.coerceAtLeast(2) else if (isNCHW) outputShape[1] else outputShape[3]
+        val classCount =
+            if (isClassMap) labels.size.coerceAtLeast(2) else if (isNCHW) outputShape[1] else outputShape[3]
         val maskHeight = if (isClassMap) outputShape[1] else if (isNCHW) outputShape[2] else outputShape[1]
         val maskWidth = if (isClassMap) outputShape[2] else if (isNCHW) outputShape[3] else outputShape[2]
         if (classCount <= 0 || maskWidth <= 0 || maskHeight <= 0) return null

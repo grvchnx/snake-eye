@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 /// The plugin uses method channels for communication between Flutter and native code.

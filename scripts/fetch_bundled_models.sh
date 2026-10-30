@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
 #
 # Download the nano (n) YOLO26 Android models into the example app's asset folder at build time so the app ships with

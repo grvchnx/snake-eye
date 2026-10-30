@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 /// Real-time performance data for a YOLO inference: frame rate, processing
 /// time, frame counter, and timestamp. Delivered via
 /// [YOLOView.onPerformanceMetrics].

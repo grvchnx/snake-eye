@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 /// Base exception class for all YOLO-related exceptions.
 ///
 /// This is the parent class for all exceptions that can be thrown by the YOLO plugin.

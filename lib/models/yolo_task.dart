@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 // lib/yolo_task.dart
 
 /// Represents the different types of tasks that can be performed by YOLO models.

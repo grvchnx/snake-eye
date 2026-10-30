@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.graphics.*
@@ -293,10 +291,10 @@ object ImageUtils {
     /**
      * Process grayscale image for 1-channel classification models
      * Optimized for handwriting recognition (EMNIST-like models)
-     * 
+     *
      * @param bitmap Input bitmap to process
      * @param targetWidth Target width for the model
-     * @param targetHeight Target height for the model  
+     * @param targetHeight Target height for the model
      * @param outputBuffer Reusable buffer for 1-channel float32 data
      * @param pixels Reusable pixel scratch array
      * @param enableColorInversion Whether to invert colors (white-on-black → black-on-white)
@@ -330,27 +328,27 @@ object ImageUtils {
                 centerCrop = true
             )
         }
-        
+
         outputBuffer.clear()
-        
+
         // Process each pixel
         scaledBitmap.getPixels(pixels, 0, targetWidth, 0, 0, targetWidth, targetHeight)
-        
+
         for (i in 0 until targetWidth * targetHeight) {
             val pixel = pixels[i]
             // Extract RGB components
             val r = (pixel shr 16) and 0xFF
-            val g = (pixel shr 8) and 0xFF  
+            val g = (pixel shr 8) and 0xFF
             val b = pixel and 0xFF
-            
+
             // Convert to grayscale using luminance formula
             var gray = (0.299f * r + 0.587f * g + 0.114f * b) / 255.0f
-            
+
             // Apply color inversion if enabled (for white-on-black handwriting)
             if (enableColorInversion) {
                 gray = 1.0f - gray
             }
-            
+
             // Apply normalization based on options
             val normalizedValue = if (enableMaxNormalization) {
                 // Simple 0-1 normalization (already done above)
@@ -359,15 +357,15 @@ object ImageUtils {
                 // Standard normalization using mean/std
                 (gray - inputMean) / inputStd
             }
-            
+
             outputBuffer.putFloat(normalizedValue)
         }
-        
+
         // Clean up scaled bitmap if it's different from input
         if (scaledBitmap !== bitmap) {
             scaledBitmap.recycle()
         }
-        
+
         outputBuffer.rewind()
         return outputBuffer
     }

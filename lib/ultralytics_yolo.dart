@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 export 'core/yolo_model_manager.dart' show DownloadProgress;
 export 'models/yolo_exceptions.dart';
 export 'models/yolo_result.dart';

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -104,7 +102,7 @@ class YOLOInstanceManager {
         }
     }
 
-    fun predictorInstance(instanceId: String){
+    fun predictorInstance(instanceId: String) {
         instances[instanceId]?.let { yolo ->
             yolo.predictorInstance();
         }

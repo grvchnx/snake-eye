@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -64,7 +62,13 @@ class Classifier(
         }
     }
 
-    override fun predict(bitmap: Bitmap, origWidth: Int, origHeight: Int, rotateForCamera: Boolean, isLandscape: Boolean): YOLOResult {
+    override fun predict(
+        bitmap: Bitmap,
+        origWidth: Int,
+        origHeight: Int,
+        rotateForCamera: Boolean,
+        isLandscape: Boolean
+    ): YOLOResult {
         t0 = System.nanoTime()
 
         ImageUtils.prepareBitmapForModel(
@@ -84,7 +88,7 @@ class Classifier(
             val enableMaxNormalization = classifierOptions?.get("enableMaxNormalization") as? Boolean ?: false
             val inputMean = (classifierOptions?.get("inputMean") as? Number)?.toFloat() ?: 0f
             val inputStd = (classifierOptions?.get("inputStd") as? Number)?.toFloat() ?: 255f
-            
+
             ImageUtils.processGrayscaleImage(
                 bitmap = inputBitmap,
                 targetWidth = inputSize.width,

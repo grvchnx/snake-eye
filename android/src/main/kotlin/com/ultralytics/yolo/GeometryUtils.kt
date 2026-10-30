@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.graphics.PointF
@@ -29,6 +27,7 @@ fun polygonIntersection(subject: List<PointF>, clip: List<PointF>): List<PointF>
                 currentInside && !nextInside -> {
                     computeIntersection(current, next, clipStart, clipEnd)?.let { outputList.add(it) }
                 }
+
                 !currentInside && nextInside -> {
                     computeIntersection(current, next, clipStart, clipEnd)?.let { outputList.add(it) }
                     outputList.add(next)
@@ -46,10 +45,14 @@ fun isInside(point: PointF, edgeStart: PointF, edgeEnd: PointF): Boolean {
 }
 
 fun computeIntersection(p1: PointF, p2: PointF, clipStart: PointF, clipEnd: PointF): PointF? {
-    val x1 = p1.x; val y1 = p1.y
-    val x2 = p2.x; val y2 = p2.y
-    val x3 = clipStart.x; val y3 = clipStart.y
-    val x4 = clipEnd.x; val y4 = clipEnd.y
+    val x1 = p1.x;
+    val y1 = p1.y
+    val x2 = p2.x;
+    val y2 = p2.y
+    val x3 = clipStart.x;
+    val y3 = clipStart.y
+    val x4 = clipEnd.x;
+    val y4 = clipEnd.y
     val denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
     if (abs(denom) < 1e-10) return null
     val t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom

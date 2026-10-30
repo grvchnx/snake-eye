@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -52,14 +50,14 @@ interface InferenceModel {
             if (!lower.endsWith(".onnx")) return LiteRtModel(context, modelPath, useGpu, tag)
             require(lower.endsWith("_qnn.onnx")) {
                 "Generic ONNX models are not supported; use an Ultralytics QNN context-binary export (*_qnn.onnx) " +
-                    "or a .tflite model"
+                        "or a .tflite model"
             }
             return try {
                 OrtQnnModel(context, modelPath, tag)
             } catch (e: LinkageError) {
                 throw IllegalStateException(
                     "QNN (*_qnn.onnx) models require the optional 'com.microsoft.onnxruntime:onnxruntime-android-qnn' " +
-                        "dependency in your app's build.gradle and an arm64 device",
+                            "dependency in your app's build.gradle and an arm64 device",
                     e,
                 )
             }
@@ -81,8 +79,14 @@ interface Predictor {
      * @param isLandscape Whether the device is in landscape orientation (true) or portrait (false)
      * @return YOLOResult containing detection results
      */
-    fun predict(bitmap: Bitmap, origWidth: Int, origHeight: Int, rotateForCamera: Boolean = false, isLandscape: Boolean = false): YOLOResult
-    
+    fun predict(
+        bitmap: Bitmap,
+        origWidth: Int,
+        origHeight: Int,
+        rotateForCamera: Boolean = false,
+        isLandscape: Boolean = false
+    ): YOLOResult
+
     abstract fun setIouThreshold(iou: Double)
     abstract fun setConfidenceThreshold(conf: Double)
     abstract fun setNumItemsThreshold(progress: Int)
@@ -129,8 +133,8 @@ abstract class BasePredictor : Predictor {
     protected var t3: Long = System.nanoTime()
     protected var t4: Double = 0.0
 
-    var CONFIDENCE_THRESHOLD:Float = 0.25f
-    var IOU_THRESHOLD:Float = 0.7f
+    var CONFIDENCE_THRESHOLD: Float = 0.25f
+    var IOU_THRESHOLD: Float = 0.7f
     var isFrontCamera: Boolean = false
     var cameraRotationDegrees: Int? = null
     var includeRawMaskData: Boolean = true
@@ -181,11 +185,11 @@ abstract class BasePredictor : Predictor {
     override fun setNumItemsThreshold(progress: Int) {
 
     }
-    
+
     override fun getConfidenceThreshold(): Double {
         return CONFIDENCE_THRESHOLD.toDouble()
     }
-    
+
     override fun getIouThreshold(): Double {
         return IOU_THRESHOLD.toDouble()
     }

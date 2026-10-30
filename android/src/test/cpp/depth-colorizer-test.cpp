@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 #include "../../main/cpp/depth-colorizer.h"
 
 #include <array>

@@ -1,5 +1,3 @@
-// Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
 package com.ultralytics.yolo
 
 import android.content.Context
@@ -112,7 +110,8 @@ object YOLOFileUtils {
                                 val metadataJson = JSONObject(String(entryBos.toByteArray(), StandardCharsets.UTF_8))
                                 metadataFound = buildMap {
                                     metadataJson.optString("task").takeIf { it.isNotEmpty() }?.let { put("task", it) }
-                                    metadataJson.optString("description").takeIf { it.isNotEmpty() }?.let { put("description", it) }
+                                    metadataJson.optString("description").takeIf { it.isNotEmpty() }
+                                        ?.let { put("description", it) }
                                     metadataJson.optInt("stride").takeIf { it != 0 }?.let { put("stride", it) }
                                     metadataJson.optInt("channels").takeIf { it != 0 }?.let { put("channels", it) }
                                     if (metadataJson.has("end2end")) {
@@ -303,6 +302,7 @@ object YOLOFileUtils {
                         skipFully(length)
                     }
                 }
+
                 else -> return props // unknown wire type: stop scanning
             }
         }
@@ -314,6 +314,7 @@ object YOLOFileUtils {
         is Map<*, *> -> names.entries
             .sortedBy { (k, _) -> k.toString().toIntOrNull() ?: Int.MAX_VALUE }
             .map { (_, v) -> v.toString() }
+
         is List<*> -> names.map { it.toString() }
         else -> null
     }
@@ -328,9 +329,26 @@ object YOLOFileUtils {
         return map.ifEmpty { null }
     }
 
-    private fun closeResources(afd: AssetFileDescriptor?, fis: FileInputStream?, fileChannel: FileChannel?, reason: String) {
-        try { fileChannel?.close() } catch (e: IOException) { Log.e(TAG, "Error closing FileChannel", e) }
-        try { fis?.close() } catch (e: IOException) { Log.e(TAG, "Error closing FileInputStream", e) }
-        try { afd?.close() } catch (e: IOException) { Log.e(TAG, "Error closing AssetFileDescriptor", e) }
+    private fun closeResources(
+        afd: AssetFileDescriptor?,
+        fis: FileInputStream?,
+        fileChannel: FileChannel?,
+        reason: String
+    ) {
+        try {
+            fileChannel?.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error closing FileChannel", e)
+        }
+        try {
+            fis?.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error closing FileInputStream", e)
+        }
+        try {
+            afd?.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error closing AssetFileDescriptor", e)
+        }
     }
 } // End of YoloFileUtils object
